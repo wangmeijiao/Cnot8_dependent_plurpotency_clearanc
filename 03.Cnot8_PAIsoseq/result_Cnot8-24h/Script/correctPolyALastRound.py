@@ -1,0 +1,71 @@
+#!/usr/bin/env python
+import os
+import sys
+
+
+if len(sys.argv) != 3:
+	msg = ['python',sys.argv[0],'soft_clip_file','polyA_file', '1>out', '2>err']
+	msg = ' '.join([str(x) for x in msg])
+	print(msg)
+	print('\tsoft_clip_file: Soft clip file')
+	print('\tpolyA_file: Raw polyA file')
+	print('\toutfile: Stand out')
+	quit()
+
+infile = sys.argv[1]
+polyAfile = sys.argv[2]
+
+# read soft clip
+sc_dict ={}
+with open(infile,'r') as infile:
+	for line in infile:
+		(read_name, soft_clip) = line.strip('\n').split('\t')
+		soft_clip = int(soft_clip)
+		sc_dict[read_name] = soft_clip
+
+# record
+keep = 0
+correct = 0
+
+logfile = polyAfile + '.correct.log'
+with open(polyAfile,'r') as polyAfile:
+	for line in polyAfile:
+		# record
+		flag = '' # Corrected: YES? or NO?
+		edit_num = 0
+		extendA_num = 0
+
+		(name,polyA_seq) = line.strip('\n').split('\t')
+		soft_clip = 0
+		if name in sc_dict:
+			soft_clip = sc_dict[name]
+		else:
+			sys.stderr.write(name+'\n')
+			continue
+
+		if soft_clip > len(polyA_seq):
+			keep += 1
+			flag = 'NO'
+			edit_num = 0
+			extendA_num = 0
+		else:
+			correct += 1
+			flag = 'YES'
+			trim_num = len(polyA_seq) - soft_clip
+			edit_num = trim_num
+
+			trimmed_seq = polyA_seq[trim_num:]
+			for idx in range(trim_num)[::-1]:
+				if polyA_seq[idx] == 'A':
+					extendA_num += 1
+					trimmed_seq = 'A' + trimmed_seq
+				else:
+					break
+			polyA_seq = trimmed_seq
+
+		out = [name, flag, edit_num, extendA_num, polyA_seq]
+		out = '\t'.join([str(x) for x in out])
+		print(out)
+
+with open(logfile, 'w') as log:
+	log.write('summary:\nCorrected: ' + str(correct) + '\nUncorrected: ' + str(keep))

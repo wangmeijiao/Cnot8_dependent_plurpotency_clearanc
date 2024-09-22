@@ -1,0 +1,6 @@
+cp /mnt/data/user_data/niehu/scripts/demultiplex_ligation_V2.py ./findBarcode.py
+
+/mnt/data/user_data/niehu/demultiplex_ligation_V2.py
+/mnt/data/user_data/niehu/parseBAM_V4_re.py
+
+
